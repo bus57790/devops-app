@@ -2,12 +2,14 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir flask
+# Upgrade core build tools to patched versions
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ .
 
 EXPOSE 5000
-
-USER 10001
 
 CMD ["python", "app.py"]
