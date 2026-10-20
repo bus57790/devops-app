@@ -40,6 +40,8 @@ pipeline {
                     docker run --rm \
                         -v /var/run/docker.sock:/var/run/docker.sock \
                         aquasec/trivy:latest image \
+                        --exit-code 1 \
+                        --ignore-unfixed \
                         --severity HIGH,CRITICAL ${DOCKER_HUB_REPO}:${IMAGE_TAG}
                 """
             }
