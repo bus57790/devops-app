@@ -36,7 +36,12 @@ pipeline {
 
         stage('Trivy Image Scan') {
             steps {
-                sh "trivy image --severity HIGH,CRITICAL ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
+                sh """
+                    docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        aquasec/trivy:latest image \
+                        --severity HIGH,CRITICAL ${DOCKER_HUB_REPO}:${IMAGE_TAG}
+                """
             }
         }
 
