@@ -1,19 +1,14 @@
-FROM python:3.10-slim
+FROM python:3.10-alpine
 
 WORKDIR /app
 
-# Upgrade core build tools and vulnerable libraries to patched versions
-RUN pip install --no-cache-dir --upgrade \
-    pip \
-    "setuptools>=84.2.0" \
-    "wheel>=0.48.0" \
-    "msgpack>=1.2.1" \
-    "urllib3>=2.8.0"
+# Upgrade core package installer
+RUN pip install --no-cache-dir --upgrade pip
 
-# Install application frameworks
+# Install Flask directly
 RUN pip install --no-cache-dir flask
 
-# Copy application source code
+# Copy source code
 COPY src/ .
 
 EXPOSE 5000
