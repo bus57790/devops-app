@@ -23,22 +23,27 @@ pipeline {
         stage('SonarQube Quality Gate') {
             steps {
                 withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    sh 'echo "Running SonarQube analysis against http://192.168.1.184:9000..."'
+                    sh 'echo "Running SonarQube analysis against ${SONAR_HOST}..."'
                 }
             }
         }
 
-        stage('Trivy Security Scan') {
+        stage('Docker Build') {
             steps {
-                sh 'trivy fs --severity HIGH,CRITICAL .'
+                sh "docker build -t ${DOCKER_HUB_REPO}:${IMAGE_TAG} -t ${DOCKER_HUB_REPO}:latest ."
             }
         }
 
-        stage('Docker Build & Push') {
+        stage('Trivy Image Scan') {
+            steps {
+                sh "trivy image --severity HIGH,CRITICAL ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh """
-                        docker build -t ${DOCKER_HUB_REPO}:${IMAGE_TAG} -t ${DOCKER_HUB_REPO}:latest .
                         echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
                         docker push ${DOCKER_HUB_REPO}:${IMAGE_TAG}
                         docker push ${DOCKER_HUB_REPO}:latest
@@ -51,6 +56,12 @@ pipeline {
             steps {
                 build job: 'CD-Pipeline', parameters: [string(name: 'IMAGE_TAG', value: String.valueOf(BUILD_NUMBER))], wait: false
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
